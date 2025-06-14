@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Te Amo - Matrix Effect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            height: 100vh;
+        }
+
+        #matrix-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .love-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            text-align: center;
+        }
+
+        .love-text {
+            font-size: 3.5rem;
+            color: #ff1493;
+            text-shadow: 0 0 20px #ff1493, 0 0 40px #ff1493, 0 0 60px #ff1493;
+            animation: pulse 2s ease-in-out infinite alternate;
+            font-weight: bold;
+            margin-bottom: 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .heart-symbol {
+            font-size: 3rem;
+            color: #ff69b4;
+            animation: heartbeat 1.5s ease-in-out infinite;
+            display: inline-block;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .click-effect {
+            position: absolute;
+            font-size: 1.5rem;
+            color: #ff1493;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff1493;
+            pointer-events: none;
+            animation: popUp 1.5s ease-out forwards;
+            z-index: 3;
+        }
+
+        @keyframes popUp {
+            0% {
+                transform: scale(0) translateY(0px);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) translateY(-30px);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.8) translateY(-80px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                text-shadow: 0 0 20px #ff1493, 0 0 40px #ff1493, 0 0 60px #ff1493;
+            }
+            100% {
+                text-shadow: 0 0 30px #ff1493, 0 0 60px #ff1493, 0 0 90px #ff1493;
+            }
+        }
+
+        @keyframes heartbeat {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .love-text {
+                font-size: 2.5rem;
+            }
+            .heart-symbol {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    
+    <div class="love-message">
+        <div class="love-text" onclick="createClickEffect(event)">Te Amo Cachetoncita</div>
+        <div class="heart-symbol" onclick="createClickEffect(event)">💖</div>
+    </div>
+
+    <script>
+        class MatrixEffect {
+            constructor() {
+                this.canvas = document.getElementById('matrix-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.phrases = ['Te Amo', 'Cachetoncita', '💖', '❤️', '💕', '💗', '💘', '💝', 'Love', 'Amor', 'Mi Vida', 'Corazón', '😘', '🥰', '😍', 'Hermosa', 'Princesa', '🌹', '💐', '✨'];
+                this.drops = [];
+                
+                this.resizeCanvas();
+                this.initDrops();
+                this.animate();
+                
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            resizeCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.fontSize = 16;
+                this.columns = Math.floor(this.canvas.width / this.fontSize);
+            }
+            
+            initDrops() {
+                this.drops = [];
+                for (let i = 0; i < this.columns; i++) {
+                    this.drops[i] = {
+                        y: Math.random() * this.canvas.height,
+                        speed: Math.random() * 3 + 1,
+                        phrase: this.phrases[Math.floor(Math.random() * this.phrases.length)],
+                        opacity: Math.random() * 0.5 + 0.5
+                    };
+                }
+            }
+            
+            draw() {
+                // Fondo semi-transparente para efecto de desvanecimiento
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.ctx.font = `${this.fontSize}px Courier New`;
+                
+                for (let i = 0; i < this.drops.length; i++) {
+                    const drop = this.drops[i];
+                    
+                    // Colores variados de rosa/magenta más vibrantes
+                    const colors = ['#ff1493', '#ff69b4', '#ff91a4', '#ffc0cb', '#da70d6', '#ff00ff', '#ff6347', '#ff1493'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    this.ctx.fillStyle = color;
+                    this.ctx.globalAlpha = drop.opacity;
+                    
+                    const text = drop.phrase;
+                    const x = i * this.fontSize;
+                    
+                    this.ctx.fillText(text, x, drop.y);
+                    
+                    // Mover la gota hacia abajo
+                    drop.y += drop.speed;
+                    
+                    // Reiniciar cuando llega al final
+                    if (drop.y > this.canvas.height) {
+                        drop.y = -this.fontSize * (Math.random() * 5 + 1); // Espaciado más variado
+                        drop.phrase = this.phrases[Math.floor(Math.random() * this.phrases.length)];
+                        drop.speed = Math.random() * 4 + 1; // Velocidad más variada
+                        drop.opacity = Math.random() * 0.7 + 0.3;
+                    }
+                }
+                
+                this.ctx.globalAlpha = 1;
+            }
+            
+            animate() {
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+        
+        // Iniciar el efecto cuando la página carga
+        document.addEventListener('DOMContentLoaded', () => {
+            new MatrixEffect();
+        });
+
+        // Función para crear efectos al hacer clic
+        function createClickEffect(event) {
+            const messages = ['Te Amo', '💖', 'Cachetoncita', '❤️', 'Mi Amor', '💕', '😘', 'Hermosa'];
+            
+            // Crear múltiples efectos
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const effect = document.createElement('div');
+                    effect.className = 'click-effect';
+                    effect.textContent = messages[Math.floor(Math.random() * messages.length)];
+                    
+                    // Posición aleatoria alrededor del clic
+                    const rect = event.target.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    const angle = (Math.PI * 2 * i) / 8; // Distribuir en círculo
+                    const radius = 100 + Math.random() * 50;
+                    
+                    effect.style.left = (centerX + Math.cos(angle) * radius) + 'px';
+                    effect.style.top = (centerY + Math.sin(angle) * radius) + 'px';
+                    
+                    document.body.appendChild(effect);
+                    
+                    // Eliminar el efecto después de la animación
+                    setTimeout(() => {
+                        if (effect.parentNode) {
+                            effect.parentNode.removeChild(effect);
+                        }
+                    }, 1500);
+                }, i * 100); // Retrasar cada efecto
+            }
+        }
+
+        // Agregar evento de clic a toda la pantalla para más diversión
+        document.addEventListener('click', (event) => {
+            if (!event.target.classList.contains('love-text') && !event.target.classList.contains('heart-symbol')) {
+                createClickEffect(event);
+            }
+        });
+    </script>
+</body>
+</html>
